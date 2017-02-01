@@ -1,13 +1,14 @@
 /**
  *
- * glsl_parse.cpp
- *
  * \brief  Copies contents of glsl files into c-code files to be hard-coded and
  * included in the final program as c-style strings.
  *   The only purpose of this program is to allow shaders to be edited with
  * syntax highlighting in vim (or whichever program one chooses.)
  *
  *   "Modifies" the compilation process.
+ *
+ *   \file glsl_parse.cpp
+ *   \author Thomas R. Carrel
  */
 
 
@@ -45,7 +46,8 @@ void insert_comment( ostream& out, char* exec_name )
 {
     out <<
         "/**\n" <<
-        " * filename: shaders.h\n" <<
+        " * \\file shaders.h\n" <<
+        " * \\author " << exec_name << "\n"
         " *\n" <<
         " *   Auto-generated header file containing code from all shaders" <<
         "used in this\n" <<
