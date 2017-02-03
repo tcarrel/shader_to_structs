@@ -42,11 +42,11 @@ const char DQ = 0x22; ///< Store a double quote in a constant.
 ///< easily be used in the program.
 
 
-void insert_comment( ostream& out, char* exec_name )
+void insert_comment( ostream& out, char* exec_name, string& filename )
 {
     out <<
         "/**\n" <<
-        " * \\file shaders.h\n" <<
+        " * \\file " << filename << "\n" <<
         " * \\author " << exec_name << "\n"
         " *\n" <<
         " *   Auto-generated header file containing code from all shaders" <<
@@ -188,6 +188,20 @@ int main( int argc, char* argv[] )
     ofstream of; ///< The output file stream.
     of.open( of_name.c_str() );
 
+    string c_name = of_name;
+    size_t dot = c_name.find_last_of( '.' );
+    if( dot == std::string::npos )
+    {
+        cerr << "Invalid file name.\n" << endl;
+        return 0;
+    }
+    c_name.replace( dot, c_name.length() - dot, ".cpp");
+
+
+    ofstream cfile;
+    cfile.open( c_name.c_str() );
+    
+
     bool commented = false, ///< Flag for the generated file's opening comment.
          begun = false; ///< Flag for the initial preprocessor directives in
     ///< the file.
@@ -226,7 +240,8 @@ int main( int argc, char* argv[] )
                             extension_start - (type_start + 1));
                     if( !commented )
                     {
-                        insert_comment( of, argv[0] );
+                        insert_comment( of, argv[0], of_name );
+                        insert_comment( cfile, argv[0], c_name );
                         commented = true;
                     }
 
@@ -234,7 +249,10 @@ int main( int argc, char* argv[] )
                     if( !begun )
                     {
                         header_def_start( of, macro_name.c_str() );
+
+                        cfile << "\n#include<" << of_name << ">\n" << endl;
                         begun = true;
+                        header_def_end( of, macro_name.c_str() );
                     }
 
                     for( int i = 0; shader_name[i] != 0; i++ )
@@ -260,7 +278,7 @@ int main( int argc, char* argv[] )
                     string shader_var_name = shader_name + "_" + shader_type;
 
 
-                    of << "/** From file:  " << filename << "\n */" << endl;
+                    cfile << "/** From file:  " << filename << "\n */" << endl;
 
                     string file_text = ""; ///< The code from the current
                     ///< shader file as it will be
@@ -286,16 +304,16 @@ int main( int argc, char* argv[] )
                         }
                     }
 
-                    of << "const " << SHADER_TYPE_NAME << " "
+                    cfile << "const " << SHADER_TYPE_NAME << " "
                         << shader_var_name << "(\n  ";
                     for( unsigned i = 0; i < file_text.length(); i++ )
                     {
-                        of << file_text[i];
+                        cfile << file_text[i];
                         if( file_text[i] == '\n' )
-                            of << "  ";
+                            cfile << "  ";
                     }
-                    of << ",\n  " << length.length() << endl;
-                    of << ");\n\n" << endl;
+                    cfile << ",\n  " << length.length() << endl;
+                    cfile << ");\n\n" << endl;
 
                     inf.close();
                 }
@@ -305,10 +323,10 @@ int main( int argc, char* argv[] )
 
     if( commented || begun )
     {
-        header_def_end( of, macro_name.c_str() );
         file_listing( of, filenames );
-        of << endl << endl;
-        of.close();
+        file_listing( cfile, filenames );
+        of << "\n" << endl;
+        cfile << "\n" << endl;
 
         filenames.clear();
     }
@@ -316,7 +334,9 @@ int main( int argc, char* argv[] )
     {
         cerr << "No files to process.\n" << endl;
         of << " ";
-        of.close();
+        cfile << " ";
     }
+    cfile.close();
+    of.close();
     return 0;
 }
