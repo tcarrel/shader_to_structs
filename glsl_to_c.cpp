@@ -303,10 +303,10 @@ int main( int argc, char* argv[] )
                             // Strips whole-line c-style comments,
                             // (Those beginning with // as the first two
                             // characters on the line.
-                            if( line[0] != '/' && line[0] && line[1] )
+                            if( line.substr( 0, 2 ) != "//" )
                             {
-                            file_text += DQ + line + "\\n" + DQ + "\n";
-                            length += line + "\n";
+                                file_text += DQ + line + "\\n" + DQ + "\n";
+                                length += line + "\n";
                             }
                         }
                     }
