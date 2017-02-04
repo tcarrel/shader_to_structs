@@ -250,7 +250,7 @@ int main( int argc, char* argv[] )
                     {
                         header_def_start( of, macro_name.c_str() );
 
-                        cfile << "\n#include<" << of_name << ">\n" << endl;
+                        cfile << "\n#include " << DQ << of_name << DQ << "\n" << endl;
                         begun = true;
                         header_def_end( of, macro_name.c_str() );
                     }
