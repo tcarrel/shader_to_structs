@@ -87,15 +87,15 @@ void header_def_start( ostream& out, const char* DEF_TAG )
 
     out << "struct " << SHADER_TYPE_NAME << "\n"
         << "{\n"
-        << "  const GLchar* code; ///< Source text.\n"
-        << "  const GLuint  size; ///< Number of characters in the source text.\n"
+        << "  GLchar* code; ///< Source text.\n"
+        << "  GLuint  size; ///< Number of characters in the source text.\n"
         << "\n"
         << "/** Ctor.  Necessary because structs are stored as constants.\n"
         << " *\n"
         << " * param c C-string of the shader source code.\n"
         << " * param s The number of characters in the shader source.\n"
         << " */\n"
-        << "  " << SHADER_TYPE_NAME << "( const GLchar* c, GLuint s ) : code(c), size(s)\n"
+        << "  " << SHADER_TYPE_NAME << "( GLchar* c, GLuint s ) : code(c), size(s)\n"
         << "  {}\n"
         << "};\n" << endl;
 }
@@ -315,7 +315,8 @@ int main( int argc, char* argv[] )
                     }
 
                     inst_names.push_back( new string( shader_var_name ) );
-                    cfile << "const " << SHADER_TYPE_NAME << " "
+                    cfile
+                        << SHADER_TYPE_NAME << " "
                         << shader_var_name << "(\n  ";
                     for( unsigned i = 0; i < file_text.length(); i++ )
                     {
