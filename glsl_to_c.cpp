@@ -207,6 +207,7 @@ int main( int argc, char* argv[] )
     ///< the file.
 
     vector<string*> filenames; ///< Stores the names of all of the files used.
+    vector<string*> inst_names;
 
     while( (dir_dat = readdir( directory )) )
     {
@@ -250,7 +251,9 @@ int main( int argc, char* argv[] )
                     {
                         header_def_start( of, macro_name.c_str() );
 
-                        cfile << "\n#include " << DQ << of_name << DQ << "\n" << endl;
+                        cfile
+                            << "\n#include " << DQ << of_name << DQ << "\n"
+                            << endl;
                         begun = true;
                         header_def_end( of, macro_name.c_str() );
                     }
@@ -287,7 +290,7 @@ int main( int argc, char* argv[] )
                     string line; ///< The text from the currently processing
                     ///< line from the glsl-file.
                     string length; ///< A copy of the file_text string, but
-                    ///< without the add quotes and such used to
+                    ///< without the added quotes and such used to
                     ///< make it into a c-string that is also
                     ///< in a human-readable format and
                     ///< somewhat follows coding practices, but
@@ -311,6 +314,7 @@ int main( int argc, char* argv[] )
                         }
                     }
 
+                    inst_names.push_back( new string( shader_var_name ) );
                     cfile << "const " << SHADER_TYPE_NAME << " "
                         << shader_var_name << "(\n  ";
                     for( unsigned i = 0; i < file_text.length(); i++ )
@@ -332,10 +336,30 @@ int main( int argc, char* argv[] )
     {
         file_listing( of, filenames );
         file_listing( cfile, filenames );
+        
         of << "\n" << endl;
         cfile << "\n" << endl;
 
+
+        of.close();
+        of.open( "shader_externs.h" );
+        of
+            << "//  Include at the top of any .cpp files needing access to the "
+            << "uncompiled\n"
+            << "// shaders.  This isn't the best idea, but it's convenient.  "
+            << "I'll remove this\n"
+            << "// and do just do it manually later should it become a "
+            << "problem.\n"
+            << "//\n" << endl;
+
+        for( unsigned i = 0; i < inst_names.size(); i++ )
+        {
+            of << "extern SHADER_TYPE_NAME " << *(inst_names[i]) << ";\n";
+        }
+        of << endl;
+
         filenames.clear();
+        inst_names.clear();
     }
     else
     {
