@@ -89,13 +89,15 @@ void header_def_start( ostream& out, const char* DEF_TAG )
         << "{\n"
         << "  GLchar* code; ///< Source text.\n"
         << "  GLuint  size; ///< Number of characters in the source text.\n"
+        << "  const GLuint  id; ///< unique ID for each bit of shader code.\n"
         << "\n"
         << "/** Ctor.  Necessary because structs are stored as constants.\n"
         << " *\n"
         << " * param c C-string of the shader source code.\n"
         << " * param s The number of characters in the shader source.\n"
         << " */\n"
-        << "  " << SHADER_TYPE_NAME << "( GLchar* c, GLuint s ) : code(c), size(s)\n"
+        << "  " << SHADER_TYPE_NAME << "( GLchar* c, GLuint s, GLuint i ) :\n"
+        << "    code(c), size(s), id(i)\n"
         << "  {}\n"
         << "};\n" << endl;
 }
@@ -187,6 +189,8 @@ int main( int argc, char* argv[] )
 
     ofstream of; ///< The output file stream.
     of.open( of_name.c_str() );
+
+    int id = 1;
 
     string c_name = of_name;
     size_t dot = c_name.find_last_of( '.' );
@@ -324,7 +328,9 @@ int main( int argc, char* argv[] )
                         if( file_text[i] == '\n' )
                             cfile << "  ";
                     }
-                    cfile << ",\n  " << length.length() << endl;
+                    cfile
+                        << ",\n  " << length.length() << ",\n  "
+                        << id++ << endl;
                     cfile << ");\n\n" << endl;
 
                     inf.close();
