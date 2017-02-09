@@ -48,10 +48,11 @@ Shaders in the generated header are created as const structs with the following
 declaration:  
 
 ```c
-struct shader_code  
+struct _shader_code  
 {  
-  char* code;  
-  int   size;  
+  GLchar*  code;  
+  GLuint   size;  
+  GLuint   id;
 }
 ```
 
