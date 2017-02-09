@@ -345,13 +345,13 @@ int main( int argc, char* argv[] )
         of.close();
         of.open( "shader_externs.h" );
         of
-            << "//  Include at the top of any .cpp files needing access to the "
+            << "/** Include at the top of any .cpp files needing access to the "
             << "uncompiled\n"
-            << "// shaders.  This isn't the best idea, but it's convenient.  "
+            << " * shaders.  This isn't the best idea, but it's convenient.  "
             << "I'll remove this\n"
-            << "// and do just do it manually later should it become a "
+            << " * and do just do it manually later should it become a "
             << "problem.\n"
-            << "//\n" << endl;
+            << " */\n" << endl;
 
         for( unsigned i = 0; i < inst_names.size(); i++ )
         {
