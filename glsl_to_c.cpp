@@ -116,8 +116,17 @@ void header_def_start( ostream& out, const char* def_tag )
         << "    code(c), size(s), id(i)\n"
         << "  {}\n"
         << "\n"
-        << "  ~" << SHADER_TYPE_NAME << "( void ) { delete code; }\n"
+        /*
+        << "  ~" << SHADER_TYPE_NAME << "( void )\n"
+        << "   {\n"
+        << "      if( code )\n"
+        << "      {\n"
+        << "        delete code;\n"
+        << "        code = NULL;\n"
+        << "      }\n"
+        << "   }\n"
         << "\n"
+        */
         << "};\n" << endl;
 }
 
