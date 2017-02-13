@@ -99,6 +99,9 @@ void header_def_start( ostream& out, const char* DEF_TAG )
         << "  " << SHADER_TYPE_NAME << "( GLchar* c, GLuint s, GLuint i ) :\n"
         << "    code(c), size(s), id(i)\n"
         << "  {}\n"
+        << "\n"
+        << "  ~" << SHADER_TYPE_NAME << "( void ) { delete code; }\n"
+        << "\n"
         << "};\n" << endl;
 }
 
