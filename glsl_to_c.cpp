@@ -60,8 +60,8 @@ void insert_comment( ostream& out, char* exec_name, string& filename )
         " * \\file " << filename << "\n" <<
         " * \\author " << exec_name << "\n"
         " *\n" <<
-        " *   Auto-generated header file containing code from all shaders" <<
-        "used in this\n" <<
+        " *   Auto-generated header file containing code from all " <<
+        "shaders used in this\n" <<
         " * program.  A list of the files used to generated this file can " <<
         "be found at\n" <<
         " * the bottom of this file.\n" <<
@@ -281,6 +281,16 @@ int main( int argc, char* argv[] )
 
                     if( !begun )
                     {
+                        of
+                            << "/**\n"
+                            << " * \\brief " << SHADER_TYPE_NAME
+                            << " declaration.\n */\n\n";
+
+                        cfile
+                            << "/**\n"
+                            << " * \\brief " << SHADER_TYPE_NAME 
+                            << " definition.\n */\n\n";
+
                         header_def_start( of, macro_name.c_str() );
 
                         cfile
@@ -288,6 +298,10 @@ int main( int argc, char* argv[] )
                             << endl;
                         begun = true;
                         header_def_end( of, macro_name.c_str() );
+
+
+
+
                     }
 
                     for( int i = 0; shader_name[i] != 0; i++ )
@@ -379,13 +393,17 @@ int main( int argc, char* argv[] )
         of.close();
         of.open( "shader_externs.h" );
         of
-            << "/** Include at the top of any .cpp files needing access to the "
+            << "/**\n"
+            << " *\n"
+            << " * \\brief A not-very-safe shortcut for declaring extern\n"
+            << " * variables in cpp files.\n"
+            << " *\n *\n"
+            << " *   Include at the top of any .cpp files needing access to the "
             << "uncompiled\n"
             << " * shaders.  This isn't the best idea, but it's convenient.  "
             << "I'll remove this\n"
             << " * and do just do it manually later should it become a "
-            << "problem.\n"
-            << " */\n" << endl;
+            << "problem.\n */\n" << endl;
 
         for( unsigned i = 0; i < inst_names.size(); i++ )
         {
