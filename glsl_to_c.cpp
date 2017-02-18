@@ -395,6 +395,8 @@ int main( int argc, char* argv[] )
         of
             << "/**\n"
             << " *\n"
+            << " * \\file shader_externs.h\n"
+            << " * \\author " << argv[0] << "\n *\n"
             << " * \\brief A not-very-safe shortcut for declaring extern\n"
             << " * variables in cpp files.\n"
             << " *\n *\n"
