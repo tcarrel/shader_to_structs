@@ -196,7 +196,7 @@ int main( int argc, char* argv[] )
         {
             macro_name += of_name[i];
         }
-        else if( '0' <= of_name[i] && of_name[i] <= '9' )
+        else if( i != 0 && '0' <= of_name[i] && of_name[i] <= '9' )
         {
             macro_name += of_name[i];
         }
@@ -390,6 +390,7 @@ int main( int argc, char* argv[] )
         cfile << "\n" << endl;
 
 
+#if 0
         of.close();
         of.open( "shader_externs.h" );
         of
@@ -406,6 +407,7 @@ int main( int argc, char* argv[] )
             << "I'll remove this\n"
             << " * and do just do it manually later should it become a "
             << "problem.\n */\n" << endl;
+#endif
 
         for( unsigned i = 0; i < inst_names.size(); i++ )
         {
