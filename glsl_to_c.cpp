@@ -91,8 +91,7 @@ void header_def_start( ostream& out, const char* def_tag )
         << "#include<SDL2/SDL.h>\n"
         << "#include<SDL2/SDL_opengl.h>\n"
         << "\n"
-        << "#include<GL/glu.h>\n"
-        << "#include<GL/freeglut.h>\n" << endl;
+        << "#include<GL/glu.h>\n" << endl;
 
     out << "/** Container for shader code.\n"
         << " *  Streamlines use of hard-coded shaders in OpenGL by allowing "
