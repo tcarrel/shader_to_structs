@@ -7,8 +7,8 @@
  *
  *   "Modifies" the compilation process.
  *
- *   \file glsl_to_c.cpp
- *   \author Thomas R. Carrel
+ *   @file glsl_to_c.cpp
+ *   @author Thomas R. Carrel
  */
 
 
@@ -89,12 +89,14 @@ void header_def_start( ostream& out, const char* def_tag )
 
     out << "#include<GL/glew.h>\n"
         << "#include<SDL2/SDL.h>\n"
-        << "#include<SDL2/SDL_opengl.h>\n" << endl;
+        << "#include<SDL2/SDL_opengl.h>\n\n" 
+        << "#include<string>\n"
+        << "using std::string;" << endl;
 
     out << "/** Container for shader code.\n"
-        << " *  Streamlines use of hard-coded shaders in OpenGL by allowing "
-        << "them to be\n"
-        << " *  in their own files with the use of syntactic highlighting.\n"
+        << " *  Attempts to streamline the  use of hard-coded shaders in "
+        << "OpenGL by allowing\n"
+        << " *  them to be in their own files with the use of syntactic highlighting.\n"
         << " *\n"
         << " */" << endl;
 
@@ -103,27 +105,29 @@ void header_def_start( ostream& out, const char* def_tag )
         << "  GLchar* code; ///< Source text.\n"
         << "  GLuint  size; ///< Number of characters in the source text.\n"
         << "  const GLuint  id; ///< unique ID for each bit of shader code.\n"
+        << "  const string  name; ///< A name generated from the filename.\n"
         << "\n"
         << "/** Ctor.  Necessary because structs are stored as constants.\n"
         << " *\n"
-        << " * param c C-string of the shader source code.\n"
-        << " * param s The number of characters in the shader source.\n"
+        << " * @param c C-string of the shader source code.\n"
+        << " * @param s The number of characters in the shader source.\n"
+        << " * @param i The id for this bit of code\n"
+        << " * @param n The name of this bit of code, to be used when the id "
+        << "alone is\n * insufficient.\n"
         << " */\n"
-        << "  " << SHADER_TYPE_NAME << "( GLchar* c, GLuint s, GLuint i ) :\n"
-        << "    code(c), size(s), id(i)\n"
-        << "  {}\n"
+        << "  " << SHADER_TYPE_NAME << "( const GLchar* c, GLuint s, GLuint i, "
+        << "const string& n) :\n"
+        << "    code(new GLchar[s]),\n"
+        << "    size(s),\n"
+        << "    id(i),\n"
+        << "    name(n)\n"
+        << "  {\n"
+        << "    for( unsigned ii = 0; ii < s; ii++ )\n"
+        << "    {\n"
+        << "      code[ii] = c[ii];\n"
+        << "    }\n"
+        << "  }\n"
         << "\n"
-        /*
-        << "  ~" << SHADER_TYPE_NAME << "( void )\n"
-        << "   {\n"
-        << "      if( code )\n"
-        << "      {\n"
-        << "        delete code;\n"
-        << "        code = NULL;\n"
-        << "      }\n"
-        << "   }\n"
-        << "\n"
-        */
         << "};\n" << endl;
 }
 
@@ -178,10 +182,10 @@ int main( int argc, char* argv[] )
     }
 
     string of_name = argv[1]; ///< Output filename, taken from a commandline
-                              ///< argument.
+    ///< argument.
 
     string macro_name = "_";  ///< The preprocessor directive name is 
-                              ///< generated here, an underscore is prepended.
+    ///< generated here, an underscore is prepended.
 
     for( unsigned i = 0; i < of_name.length(); i++ )
     {
@@ -206,7 +210,7 @@ int main( int argc, char* argv[] )
 
 
     DIR* directory = opendir( "./" ); ///< The current working directory's
-                                      ///< File __.
+    ///< File __.
     struct dirent* dir_dat; ///< Directory data.
 
     string filename; ///< Current file's name.
@@ -229,7 +233,7 @@ int main( int argc, char* argv[] )
 
     ofstream cfile;
     cfile.open( c_name.c_str() );
-    
+
 
     bool commented = false, ///< Flag for the generated file's opening comment.
          begun = false; ///< Flag for the initial preprocessor directives in
@@ -243,146 +247,170 @@ int main( int argc, char* argv[] )
         filename = dir_dat->d_name;
         if( filename[0] != '.' ) // Ignore hidden files
         {
-            //get file extension.
             /** Location of the period that begins the file extension.
             */
             size_t extension_start = filename.find_last_of( '.' );
-            size_t type_start = filename.find_first_of( '.' ); ///< Location of
-            ///< the first
-            ///< period in
-            ///< the
-            ///< filename.
             if( extension_start != std::string::npos )
             {
                 string extension = filename.substr( extension_start );
                 if( extension == ".glsl" )
                 {
                     filenames.push_back( new string(filename) );
-
-                    /** The name of the current shader, taken from the
-                     *  filename.
-                     */
-                    string shader_name = filename.substr( 0, type_start ); 
-                    /** The type of the shader (vertex, fragment, etc).
-                    */
-                    string shader_type = filename.substr(
-                            type_start + 1,
-                            extension_start - (type_start + 1));
-                    if( !commented )
-                    {
-                        insert_comment( of, argv[0], of_name );
-                        insert_comment( cfile, argv[0], c_name );
-                        commented = true;
-                    }
-
-
-                    if( !begun )
-                    {
-                        of
-                            << "/**\n"
-                            << " * \\brief " << SHADER_TYPE_NAME
-                            << " declaration.\n */\n\n";
-
-                        cfile
-                            << "/**\n"
-                            << " * \\brief " << SHADER_TYPE_NAME 
-                            << " definition.\n */\n\n";
-
-                        header_def_start( of, macro_name.c_str() );
-
-                        cfile
-                            << "\n#include " << DQ << of_name << DQ << "\n"
-                            << endl;
-                        begun = true;
-                        header_def_end( of, macro_name.c_str() );
-
-
-
-
-                    }
-
-                    for( int i = 0; shader_name[i] != 0; i++ )
-                    {
-                        if( shader_name[i] > 0x40 && shader_name[i] < 0x7B )
-                            shader_name[i] -= 0x20;
-                    }
-
-                    inf.open( filename.c_str() );
-
-                    if( !inf.good() )
-                    {
-                        cerr
-                            << "Could not read file <" << filename 
-                            << ">, skipping." << endl;
-                        inf.close();
-                        continue;
-                    }
-
-                    /** Name of the instance of the shader code struct that
-                     *  will be used to store the current shader.
-                     */
-                    string shader_var_name = shader_name + "_" + shader_type;
-
-
-                    cfile << "/** From file:  " << filename << "\n */" << endl;
-
-                    string file_text = ""; ///< The code from the current
-                    ///< shader file as it will be
-                    ///< output into the generated file.
-
-                    string line; ///< The text from the currently processing
-                    ///< line from the glsl-file.
-                    string length; ///< A copy of the file_text string, but
-                    ///< without the added quotes and such used to
-                    ///< make it into a c-string that is also
-                    ///< in a human-readable format and
-                    ///< somewhat follows coding practices, but
-                    ///< which would make its length incorrect.
-                    for( 
-                            getline( inf, line );
-                            !inf.eof();
-                            getline( inf, line ) )
-                    {
-                        if( line != "" )
-                        {
-                            // Nested for readability.
-                            // Strips whole-line c-style comments,
-                            // (Those beginning with // as the first two
-                            // characters on the line.
-                            if( line.substr( 0, 2 ) != "//" )
-                            {
-                                file_text += DQ + line + "\\n" + DQ + "\n";
-                                length += line + "\n";
-                            }
-                        }
-                    }
-
-                    inst_names.push_back( new string( shader_var_name ) );
-                    cfile
-                        << SHADER_TYPE_NAME << " "
-                        << shader_var_name << "(\n  ";
-                    for( unsigned i = 0; i < file_text.length(); i++ )
-                    {
-                        cfile << file_text[i];
-                        if( file_text[i] == '\n' )
-                            cfile << "  ";
-                    }
-                    cfile
-                        << ",\n  " << length.length() << ",\n  "
-                        << id++ << endl;
-                    cfile << ");\n\n" << endl;
-
-                    inf.close();
                 }
             }
         }
     }
 
+    for( unsigned i = 0; i < filenames.size(); i ++ )
+    {
+        //get file extension.
+        /** Location of the period that begins the file extension.
+        */
+        size_t extension_start = filenames[i]->find_last_of( '.' );
+        /** Location of the first period in the filename.
+        */
+        size_t type_start = filenames[i]->find_first_of( '.' );
+
+        /** The name of the current shader, taken from the
+         *  filename.
+         */
+        string shader_name = filenames[i]->substr( 0, type_start ); 
+        /** The type of the shader (vertex, fragment, etc).
+        */
+        string shader_type = filenames[i]->substr(
+                type_start + 1,
+                extension_start - (type_start + 1));
+        if( !commented )
+        {
+            insert_comment( of, argv[0], of_name );
+            insert_comment( cfile, argv[0], c_name );
+            commented = true;
+        }
+
+
+        if( !begun )
+        {
+            of
+                << "/**\n"
+                << " * \\brief " << SHADER_TYPE_NAME
+                << " declaration.\n */\n\n";
+
+            cfile
+                << "/**\n"
+                << " * \\brief " << SHADER_TYPE_NAME 
+                << " definition.\n */\n\n";
+
+            header_def_start( of, macro_name.c_str() );
+
+            cfile
+                << "\n#include " << DQ << of_name << DQ << "\n"
+                << "#include<initializer_list>\n" << endl;
+            begun = true;
+            header_def_end( of, macro_name.c_str() );
+
+            cfile
+                << "\n\n"
+                << "const uint32_t SHADER_QTY = " << filenames.size() << ";\n"
+                << SHADER_TYPE_NAME << " SHADERS[] = {\n" << endl;
+        }
+
+        for( int i = 0; shader_name[i] != 0; i++ )
+        {
+            if( shader_name[i] > 0x40 && shader_name[i] < 0x7B )
+                shader_name[i] -= 0x20;
+        }
+
+        inf.open( filenames[i]->c_str() );
+
+        if( !inf.good() )
+        {
+            cerr
+                << "Could not read file <" << filename 
+                << ">, skipping." << endl;
+            inf.close();
+            continue;
+        }
+
+        /** Name of the instance of the shader code struct that
+         *  will be used to store the current shader.
+         */
+        string shader_var_name = shader_name + "_" + shader_type;
+
+
+        cfile << "/** From file:  " << filename << "\n */" << endl;
+
+        string file_text = ""; ///< The code from the current
+        ///< shader file as it will be
+        ///< output into the generated file.
+
+        string line; ///< The text from the currently processing
+        ///< line from the glsl-file.
+        string length; ///< A copy of the file_text string, but
+        ///< without the added quotes and such used to
+        ///< make it into a c-string that is also
+        ///< in a human-readable format and
+        ///< somewhat follows coding practices, but
+        ///< which would make its length incorrect.
+        for( 
+                getline( inf, line );
+                !inf.eof();
+                getline( inf, line ) )
+        {
+            if( line != "" )
+            {
+                // Nested for readability.
+                // Strips whole-line c-style comments,
+                // (Those beginning with // as the first two
+                // characters on the line.
+                if( line.substr( 0, 2 ) != "//" )
+                {
+                    file_text += DQ + line + "\\n" + DQ + "\n";
+                    length += line + "\n";
+                }
+            }
+        }
+
+        inst_names.push_back( new string( shader_var_name ) );
+        cfile
+            << SHADER_TYPE_NAME << "(\n  ";
+        for( unsigned i = 0; i < file_text.length(); i++ )
+        {
+            cfile << file_text[i];
+            if( file_text[i] == '\n' )
+                cfile << "  ";
+        }
+        cfile
+            << ",\n  " << length.length() << ",\n  "
+            << id++ << ",\n" 
+            << DQ << shader_var_name << DQ << endl;
+        cfile << ")";
+        
+        cfile << ((i == filenames.size() - 1) ? "\n" : ",") << endl;
+
+        inf.close();
+    }
+
+    cfile << "};\n\n" << endl;
+
+    cfile
+        << "SHADER_TYPE_NAME* get_shader( const std::string& name )\n"
+        << "{\n"
+        << "  for( unsigned i = 0; i < SHADER_QTY; i++ )\n"
+        << "  {\n"
+        << "    if( SHADERS[i].name == name )\n"
+        << "    {\n"
+        << "      return &SHADERS[i];\n"
+        << "    }\n"
+        << "  }\n\n"
+        << "  return NULL;\n"
+        << "}\n" << endl;
+
+
     if( commented || begun )
     {
         file_listing( of, filenames );
         file_listing( cfile, filenames );
-        
+
         of << "\n" << endl;
         cfile << "\n" << endl;
 
@@ -406,10 +434,9 @@ int main( int argc, char* argv[] )
             << "problem.\n */\n" << endl;
 #endif
 
-        for( unsigned i = 0; i < inst_names.size(); i++ )
-        {
-            of << "extern SHADER_TYPE_NAME " << *(inst_names[i]) << ";\n";
-        }
+        of << "extern SHADER_TYPE_NAME SHADERS[];\n";
+        of << "extern const uint32_t SHADER_QTY;\n";
+        of << "extern SHADER_TYPE_NAME* get_shader( const std::string& );\n";
         of << endl;
 
         filenames.clear();
