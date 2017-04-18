@@ -382,7 +382,7 @@ int main( int argc, char* argv[] )
         cfile
             << ",\n  " << length.length() << ",\n  "
             << id++ << ",\n" 
-            << DQ << shader_var_name << DQ << endl;
+            << "  " << DQ << shader_var_name << DQ << endl;
         cfile << ")";
         
         cfile << ((i == filenames.size() - 1) ? "\n" : ",") << endl;
