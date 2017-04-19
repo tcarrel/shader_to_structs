@@ -1,0 +1,3 @@
+.*.o
+glsl_to_c
+Errors/
