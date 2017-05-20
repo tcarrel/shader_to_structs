@@ -28,6 +28,8 @@ using std::ostream;
 #include<vector>
 using std::vector;
 
+#include<algorithm>
+
 //Debug
 #include<cassert>
 //using std::assert;
@@ -91,6 +93,7 @@ void header_def_start( ostream& out, const char* def_tag )
         << "#include<SDL2/SDL.h>\n"
         << "#include<SDL2/SDL_opengl.h>\n\n" 
         << "#include<string>\n"
+//        << "#include<cstdio>\n"
         << "using std::string;" << endl;
 
     out << "/** Container for shader code.\n"
@@ -102,9 +105,9 @@ void header_def_start( ostream& out, const char* def_tag )
 
     out << "struct " << SHADER_TYPE_NAME << "\n"
         << "{\n"
-        << "  GLchar* code; ///< Source text.\n"
-        << "  GLuint  size; ///< Number of characters in the source text.\n"
-        << "  const GLuint  id; ///< unique ID for each bit of shader code.\n"
+        << "  string        code; ///< Source text.\n"
+        << "  GLuint        size; ///< Number of characters in the source text.\n"
+        << "  const GLuint  id;   ///< unique ID for each bit of shader code.\n"
         << "  const string  name; ///< A name generated from the filename.\n"
         << "\n"
         << "/** Ctor.  Necessary because structs are stored as constants.\n"
@@ -117,14 +120,21 @@ void header_def_start( ostream& out, const char* def_tag )
         << " */\n"
         << "  " << SHADER_TYPE_NAME << "( const GLchar* c, GLuint s, GLuint i, "
         << "const string& n) :\n"
-        << "    code(new GLchar[s]),\n"
-        << "    size(s),\n"
+        << "    code(c),\n"
+        << "    size(0),\n"
         << "    id(i),\n"
         << "    name(n)\n"
         << "  {\n"
-        << "    for( unsigned ii = 0; ii < s; ii++ )\n"
+//        << "    string temp(c);\n"
+        << "    size = code.length();\n"
+//        << "    code = new GLchar[size];\n"
+        << "    for( unsigned ii = 0; ii < size; ii++ )\n"
         << "    {\n"
-        << "      code[ii] = c[ii];\n"
+//        << "      code[ii] = temp[ii];\n"
+        << "      if( code[ii] < 0x20 && code[ii] != '\\n')\n"
+        << "      {\n"
+        << "        code[ii] = '@';\n"
+        << "      }\n"
         << "    }\n"
         << "  }\n"
         << "\n"
@@ -149,7 +159,7 @@ void header_def_end( ostream& out, const char* def_tag )
  *  param out Output stream for the file being written.
  *  param names A vector containing the names of all the files that were used.
  */
-void file_listing( ostream& out, vector<string*> names )
+void file_listing( ostream& out, vector<string> names )
 {
     out <<
         "//\n" <<
@@ -158,7 +168,7 @@ void file_listing( ostream& out, vector<string*> names )
 
     for( auto file = names.begin(); file != names.end(); ++file )
     {
-        out << "// " << **file << endl;
+        out << "// " << *file << endl;
     }
 
     out << "//" << endl;
@@ -239,7 +249,7 @@ int main( int argc, char* argv[] )
          begun = false; ///< Flag for the initial preprocessor directives in
     ///< the file.
 
-    vector<string*> filenames; ///< Stores the names of all of the files used.
+    vector<string> filenames; ///< Stores the names of all of the files used.
     vector<string*> inst_names;
 
     while( (dir_dat = readdir( directory )) )
@@ -255,29 +265,32 @@ int main( int argc, char* argv[] )
                 string extension = filename.substr( extension_start );
                 if( extension == ".glsl" )
                 {
-                    filenames.push_back( new string(filename) );
+                    string name = filename;
+                    filenames.push_back( name );
                 }
             }
         }
     }
+
+    std::sort( filenames.begin(), filenames.end() );
 
     for( unsigned i = 0; i < filenames.size(); i ++ )
     {
         //get file extension.
         /** Location of the period that begins the file extension.
         */
-        size_t extension_start = filenames[i]->find_last_of( '.' );
+        size_t extension_start = filenames[i].find_last_of( '.' );
         /** Location of the first period in the filename.
         */
-        size_t type_start = filenames[i]->find_first_of( '.' );
+        size_t type_start = filenames[i].find_first_of( '.' );
 
         /** The name of the current shader, taken from the
          *  filename.
          */
-        string shader_name = filenames[i]->substr( 0, type_start ); 
+        string shader_name = filenames[i].substr( 0, type_start ); 
         /** The type of the shader (vertex, fragment, etc).
         */
-        string shader_type = filenames[i]->substr(
+        string shader_type = filenames[i].substr(
                 type_start + 1,
                 extension_start - (type_start + 1));
         if( !commented )
@@ -320,7 +333,7 @@ int main( int argc, char* argv[] )
                 shader_name[i] -= 0x20;
         }
 
-        inf.open( filenames[i]->c_str() );
+        inf.open( filenames[i].c_str() );
 
         if( !inf.good() )
         {
