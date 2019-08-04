@@ -30,7 +30,7 @@ a convention, of sorts, filenames for glsl code should be as follows:
 that makes sense within the rest of the code.  It should also be a name that
 can be used as a valid variable name within c/c++.
 * [type] is the type of the shader, i.e.: vertex, fragment, etc.  The types are
-abreviated as follows:
+abbreviated as follows:
 * * v - vertex
 * * f - fragment
 * * others will be decided as development on the main program progresses.
