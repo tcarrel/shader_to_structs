@@ -6,7 +6,7 @@ Processes all OpenGL shader language files in the current directory and
 combines them into a single c-header file.  This is to simplify sending the
 shaders to the GPU and compiling them on the gpu.
 
-I created this to be used withing my senior project.
+I created this to be used within my senior project.
 
 ##Usage
 
